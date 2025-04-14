@@ -112,7 +112,6 @@ stages:
           echo dotnet msbuild `dotnet msbuild --version`
           echo dotnet nuget `dotnet nuget --version`
           echo dotnet `dotnet --version`
-
     - task: NuGetCommand@2
       name: publish
       enabled: true
