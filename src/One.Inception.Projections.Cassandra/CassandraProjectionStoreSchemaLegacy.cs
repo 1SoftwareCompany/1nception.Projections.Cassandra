@@ -15,7 +15,7 @@ public class CassandraProjectionStoreSchemaLegacy // only until delete is comple
     private readonly ICassandraReplicationStrategy replicationStrategy;
     private readonly IInceptionContextAccessor _inceptionContextAccessor;
 
-    const string DropQueryTemplate = @"DROP TABLE IF EXISTS {0};";
+    const string DropQueryTemplate = @"DROP TABLE IF EXISTS {0}.""{1}"";";
 
     private DropProjectiondStatementLegacy _dropProjectiondStatementLegacy;
 
