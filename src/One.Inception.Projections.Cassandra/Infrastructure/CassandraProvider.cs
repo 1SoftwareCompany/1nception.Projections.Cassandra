@@ -32,17 +32,20 @@ public class CassandraProvider : ICassandraProvider
         this.logger = logger;
     }
 
-    private static SemaphoreSlim clusterThreadGate = new SemaphoreSlim(1); // Instantiate a Singleton of the Semaphore with a value of 1. This means that only 1 thread can be granted access at a time
+    private static SemaphoreSlim clusterThreadGate = new SemaphoreSlim(1, 1); // Instantiate a Singleton of the Semaphore with a value of 1. This means that only 1 thread can be granted access at a time
 
     public async Task<ICluster> GetClusterAsync()
     {
         if (cluster is null == false)
             return cluster;
 
-        await clusterThreadGate.WaitAsync(30000).ConfigureAwait(false);
-
+        bool lockAccuired = false;
         try
         {
+            lockAccuired = await clusterThreadGate.WaitAsync(30000).ConfigureAwait(false);
+            if (lockAccuired == false)
+                throw new TimeoutException("Unable to accquire lock for casandra cluster.");
+
             if (cluster is null == false)
                 return cluster;
 
@@ -90,7 +93,8 @@ public class CassandraProvider : ICassandraProvider
         }
         finally
         {
-            clusterThreadGate?.Release();
+            if (lockAccuired)
+                clusterThreadGate?.Release();
         }
     }
 
@@ -99,16 +103,20 @@ public class CassandraProvider : ICassandraProvider
         return keyspaceNamingStrategy.GetName(baseConfigurationKeyspace).ToLower();
     }
 
-    private static SemaphoreSlim threadGate = new SemaphoreSlim(1); // Instantiate a Singleton of the Semaphore with a value of 1. This means that only 1 thread can be granted access at a time
+    private static SemaphoreSlim threadGate = new SemaphoreSlim(1, 1); // Instantiate a Singleton of the Semaphore with a value of 1. This means that only 1 thread can be granted access at a time
 
     public async Task<ISession> GetSessionAsync()
     {
+        bool lockAccuired = false;
+
         if (session is null || session.IsDisposed)
         {
-            await threadGate.WaitAsync(30000).ConfigureAwait(false);
-
             try
             {
+                lockAccuired = await threadGate.WaitAsync(30000).ConfigureAwait(false);
+                if (lockAccuired == false)
+                    throw new TimeoutException("Unable to acquire lock for getting cassandra session.");
+
                 if (session is null || session.IsDisposed)
                 {
                     if (logger.IsEnabled(LogLevel.Information))
@@ -120,7 +128,8 @@ public class CassandraProvider : ICassandraProvider
             }
             finally
             {
-                threadGate?.Release();
+                if (lockAccuired)
+                    threadGate?.Release();
             }
         }
 

@@ -32,7 +32,7 @@ public sealed class AutoUpdateToV12DeleteTable : IAutoUpdate
 
     public uint ExecutionSequence => 1;
 
-    public string Name => "DeleteOldProjectionsAndCreateTheSameTableWithNewSchema";
+    public string Name => "DeleteLegacyProjectionsTables";
 
     /// <summary>
     /// !!!!!!!! Make sure wherever we are updating you are loading from the correct `new` tables and they are done
