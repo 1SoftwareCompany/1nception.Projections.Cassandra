@@ -1,8 +1,8 @@
 <Project>
 
   <PropertyGroup>
-    <Authors>Elders OSS</Authors>
-    <Company>Elders OSS</Company>
+    <Authors>1Software</Authors>
+    <Company>1Software</Company>
 
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <IncludeSymbols>true</IncludeSymbols>
@@ -17,6 +17,8 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All"/>
+    <PackageReference Include="ThisAssembly.Git" Version="2.0.14" PrivateAssets="All" />
+    <PackageReference Include="NuGetizer" Version="1.4.2" PrivateAssets="All"  />
   </ItemGroup>
 
 </Project>
