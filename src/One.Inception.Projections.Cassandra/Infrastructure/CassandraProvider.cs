@@ -7,6 +7,7 @@ using One.Inception.Projections.Cassandra.Infrastructure;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using DataStax = Cassandra;
+using Cassandra.OpenTelemetry;
 
 namespace One.Inception.Projections.Cassandra;
 
@@ -80,6 +81,7 @@ public class CassandraProvider : ICassandraProvider
                             .SetCoreConnectionsPerHost(HostDistance.Local, 2)
                             .SetMaxConnectionsPerHost(HostDistance.Local, 8)
                             .SetMaxRequestsPerConnection(options.MaxRequestsPerConnection))
+                    .WithOpenTelemetryInstrumentation()
                     .Build();
 
                 await cluster.RefreshSchemaAsync().ConfigureAwait(false);
