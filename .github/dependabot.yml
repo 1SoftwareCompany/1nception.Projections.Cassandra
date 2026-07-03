@@ -10,9 +10,6 @@ updates:
       time: "08:00"
       timezone: "Europe/Sofia"
 
-    reviewers:
-      - "1SoftwareCompany/soldier"
-
     commit-message:
       prefix: "fix: "
 
@@ -20,3 +17,9 @@ updates:
       - dependency-name: "*"
         update-types:
           - "version-update:semver-patch"
+
+    ignore:
+      - dependency-name: "*"
+        update-types:
+          - "version-update:semver-minor"
+          - "version-update:semver-major"
