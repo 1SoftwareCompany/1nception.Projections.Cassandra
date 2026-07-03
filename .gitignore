@@ -244,4 +244,4 @@ $RECYCLE.BIN/
 **/.*/
  
 
-!github/workflows
+ !/.github/workflows/*
