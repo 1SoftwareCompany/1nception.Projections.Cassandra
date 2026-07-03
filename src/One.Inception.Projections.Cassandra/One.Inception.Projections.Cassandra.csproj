@@ -29,7 +29,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="1nception" Version="12.0.0" />
+    <PackageReference Include="1nception" Version="12.2.4" />
     <PackageReference Include="CassandraCSharpDriver" Version="3.22.0" />
     <InternalsVisibleTo Include="One.Inception.Projections.Cassandra.Integration.Tests" />
   </ItemGroup>
