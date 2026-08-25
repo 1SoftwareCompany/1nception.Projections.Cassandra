@@ -44,14 +44,16 @@ public class CassandraProjectionPartitionStoreSchema : ICassandraProjectionParti
 
         string keyspace = cassandraProvider.GetKeyspace();
         if (logger.IsEnabled(LogLevel.Debug))
-            logger.LogDebug("[EventStore] Creating table `{tableName}` with `{address}` in keyspace `{keyspace}`...", PartionsTableName, session.Cluster.AllHosts().First().Address, keyspace);
+            logger.LogDebug("[Projections] Creating table `{tableName}` with `{address}` in keyspace `{keyspace}`...", PartionsTableName, session.Cluster.AllHosts().First().Address, keyspace);
 
         PreparedStatement createEventsTableStatement = await _createTablePreparedStatement.PrepareStatementAsync(session, PartionsTableName);
 
-        await session.ExecuteAsync(createEventsTableStatement.Bind()).ConfigureAwait(false);
+        var rs = await session.ExecuteAsync(createEventsTableStatement.Bind()).ConfigureAwait(false);
 
         if (logger.IsEnabled(LogLevel.Debug))
-            logger.LogDebug("[EventStore] Created table `{tableName}` in keyspace `{keyspace}`...", PartionsTableName, keyspace);
+            logger.LogDebug("[Projections] Created table `{tableName}` in keyspace `{keyspace}`...", PartionsTableName, keyspace);
+
+        logger.LogInformation("[Projections] Created table `{tableName}`... Maybe?! Is schema in agreement = {isSchemaInAgreement}", PartionsTableName, rs?.Info?.IsSchemaInAgreement);
     }
 
     public async Task CreateKeyspace(ISession session)

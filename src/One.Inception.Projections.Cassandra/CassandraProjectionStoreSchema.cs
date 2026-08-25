@@ -56,10 +56,12 @@ public class CassandraProjectionStoreSchema : IProjectionStoreStorageManager
             logger.LogDebug("[Projections] Creating table `{tableName}` with `{address}`...", location, session.Cluster.AllHosts().First().Address);
 
         PreparedStatement statement = await _createTablePreparedStatementNew.PrepareStatementAsync(session, location);
-        await session.ExecuteAsync(statement.Bind()).ConfigureAwait(false);
+        var rs = await session.ExecuteAsync(statement.Bind()).ConfigureAwait(false);
 
         if (logger.IsEnabled(LogLevel.Debug))
             logger.LogDebug("[Projections] Created table `{tableName}`... Maybe?!", location);
+
+        logger.LogInformation("[Projections] Created table `{tableName}`... Maybe?! Is schema in agreement = {isSchemaInAgreement}", location, rs?.Info?.IsSchemaInAgreement);
     }
 
     public async Task CreateProjectionsStorageAsync(string location)
