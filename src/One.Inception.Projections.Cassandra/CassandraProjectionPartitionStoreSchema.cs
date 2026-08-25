@@ -1,10 +1,11 @@
-﻿using Cassandra;
-using One.Inception.MessageProcessing;
-using One.Inception.Projections.Cassandra.Infrastructure;
-using Microsoft.Extensions.Logging;
-using System;
+﻿using System;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
+using Cassandra;
+using Microsoft.Extensions.Logging;
+using One.Inception.MessageProcessing;
+using One.Inception.Projections.Cassandra.Infrastructure;
 
 namespace One.Inception.Projections.Cassandra;
 
@@ -46,20 +47,29 @@ public class CassandraProjectionPartitionStoreSchema : ICassandraProjectionParti
         if (logger.IsEnabled(LogLevel.Debug))
             logger.LogDebug("[Projections] Creating table `{tableName}` with `{address}` in keyspace `{keyspace}`...", PartionsTableName, session.Cluster.AllHosts().First().Address, keyspace);
 
+        long t0 = Stopwatch.GetTimestamp();
         PreparedStatement createEventsTableStatement = await _createTablePreparedStatement.PrepareStatementAsync(session, PartionsTableName);
 
         var rs = await session.ExecuteAsync(createEventsTableStatement.Bind()).ConfigureAwait(false);
 
+        TimeSpan elapsed = Stopwatch.GetElapsedTime(t0);
+
         if (logger.IsEnabled(LogLevel.Debug))
             logger.LogDebug("[Projections] Created table `{tableName}` in keyspace `{keyspace}`...", PartionsTableName, keyspace);
 
-        logger.LogInformation("[Projections] Created table `{tableName}`... Maybe?! Is schema in agreement = {isSchemaInAgreement}", PartionsTableName, rs?.Info?.IsSchemaInAgreement);
+        logger.LogInformation("[Projections] Created table `{tableName}`... Maybe?! Is schema in agreement = {isSchemaInAgreement}. Time elapsed : {timeForExecution}", PartionsTableName, rs?.Info?.IsSchemaInAgreement, elapsed);
     }
 
     public async Task CreateKeyspace(ISession session)
     {
+        long t0 = Stopwatch.GetTimestamp();
+
         IStatement createTableStatement = await GetCreateKeySpaceQuery(session).ConfigureAwait(false);
-        await session.ExecuteAsync(createTableStatement).ConfigureAwait(false);
+        var rs = await session.ExecuteAsync(createTableStatement).ConfigureAwait(false);
+
+        TimeSpan elapsed = Stopwatch.GetElapsedTime(t0);
+
+        logger.LogInformation("[Projections] Created keyspace from partition store. Is schema in agreement = {isSchemaInAgreement}. Time elapsed : {timeForExecution}", rs?.Info?.IsSchemaInAgreement, elapsed);
     }
 
     private async Task<IStatement> GetCreateKeySpaceQuery(ISession session)

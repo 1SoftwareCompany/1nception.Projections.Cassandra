@@ -77,6 +77,7 @@ public class CassandraProvider : ICassandraProvider
                     .WithTypeSerializers(new TypeSerializerDefinitions().Define(new ReadOnlyMemoryTypeSerializer()))
                     .WithReconnectionPolicy(new ExponentialReconnectionPolicy(100, 100000))
                     .WithCompression(CompressionType.LZ4)
+                    .WithMaxSchemaAgreementWaitSeconds(1200) // temp 20 min for seeing how much time it really takes
                     .WithPoolingOptions(new PoolingOptions()
                             .SetCoreConnectionsPerHost(HostDistance.Local, 2)
                             .SetMaxConnectionsPerHost(HostDistance.Local, 8)
