@@ -37,7 +37,7 @@
 
   <ItemGroup>
     <PackageReference Update="NuGetizer" Version="1.4.6" />
-    <PackageReference Update="ThisAssembly.Git" Version="2.1.2" />
+    <PackageReference Update="ThisAssembly.Git" Version="2.1.5" />
   </ItemGroup>
 
 </Project>
