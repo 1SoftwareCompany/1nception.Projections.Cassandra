@@ -7,6 +7,7 @@ using Cassandra.Data.Linq;
 using One.Inception.MessageProcessing;
 using One.Inception.Projections.Cassandra.Infrastructure;
 using Microsoft.Extensions.Logging;
+using System.Diagnostics;
 
 namespace One.Inception.Projections.Cassandra;
 
@@ -52,14 +53,21 @@ public class CassandraProjectionStoreSchema : IProjectionStoreStorageManager
 
     public async Task CreateTableAsync(ISession session, string location)
     {
+        long t0 = Stopwatch.GetTimestamp();
+
         if (logger.IsEnabled(LogLevel.Debug))
             logger.LogDebug("[Projections] Creating table `{tableName}` with `{address}`...", location, session.Cluster.AllHosts().First().Address);
 
         PreparedStatement statement = await _createTablePreparedStatementNew.PrepareStatementAsync(session, location);
-        await session.ExecuteAsync(statement.Bind()).ConfigureAwait(false);
+
+        var rs = await session.ExecuteAsync(statement.Bind()).ConfigureAwait(false);
+
+        TimeSpan elapsed = Stopwatch.GetElapsedTime(t0);
 
         if (logger.IsEnabled(LogLevel.Debug))
             logger.LogDebug("[Projections] Created table `{tableName}`... Maybe?!", location);
+
+        logger.LogInformation("[Projections] Created table `{tableName}`... Maybe?! Is schema in agreement = {isSchemaInAgreement}. Time elapsed : {timeForExecution}", location, rs?.Info?.IsSchemaInAgreement, elapsed);
     }
 
     public async Task CreateProjectionsStorageAsync(string location)
@@ -86,8 +94,14 @@ public class CassandraProjectionStoreSchema : IProjectionStoreStorageManager
 
     public async Task CreateKeyspace(ISession session)
     {
+        long t0 = Stopwatch.GetTimestamp();
+
         IStatement createTableStatement = await GetCreateKeySpaceQuery(session).ConfigureAwait(false);
-        await session.ExecuteAsync(createTableStatement).ConfigureAwait(false);
+        var rs = await session.ExecuteAsync(createTableStatement).ConfigureAwait(false);
+
+        TimeSpan elapsed = Stopwatch.GetElapsedTime(t0);
+
+        logger.LogInformation("[Projections] Created keyspace from projections store Maybe?! Is schema in agreement = {isSchemaInAgreement}. Time elapsed : {timeForExecution}", rs?.Info?.IsSchemaInAgreement, elapsed);
     }
 
     private async Task<IStatement> GetCreateKeySpaceQuery(ISession session)

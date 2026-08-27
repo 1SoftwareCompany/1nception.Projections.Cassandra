@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>Library</OutputType>
-    <TargetFrameworks>net8.0;net9.0</TargetFrameworks>
+    <TargetFrameworks>net10.0</TargetFrameworks>
   </PropertyGroup>
 
   <!--Nuget-->
@@ -25,13 +25,19 @@
     <RootNamespace>One.Inception.Projections.Cassandra</RootNamespace>
     <NeutralLanguage>en-US</NeutralLanguage>
     <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
-    <AssemblyVersion>12.0.0</AssemblyVersion>
+    <AssemblyVersion>13.0.0</AssemblyVersion>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="1nception" Version="12.0.0" />
+    <PackageReference Include="1nception" Version="13.0.0-preview.15" />
     <PackageReference Include="CassandraCSharpDriver" Version="3.22.1" />
+    <PackageReference Include="CassandraCSharpDriver.OpenTelemetry" Version="3.22.0" />
     <InternalsVisibleTo Include="One.Inception.Projections.Cassandra.Integration.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Update="NuGetizer" Version="1.4.6" />
+    <PackageReference Update="ThisAssembly.Git" Version="2.1.2" />
   </ItemGroup>
 
 </Project>
