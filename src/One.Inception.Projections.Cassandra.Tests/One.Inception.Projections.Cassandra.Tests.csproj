@@ -9,7 +9,7 @@
     <PackageReference Include="1nception" Version="13.0.1" />
     <PackageReference Include="Machine.Specifications.Runner.VisualStudio" Version="2.10.3" />
     <PackageReference Include="Machine.Specifications.Should" Version="1.0.0" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.9.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.10.0" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\One.Inception.Projections.Cassandra\One.Inception.Projections.Cassandra.csproj" />
