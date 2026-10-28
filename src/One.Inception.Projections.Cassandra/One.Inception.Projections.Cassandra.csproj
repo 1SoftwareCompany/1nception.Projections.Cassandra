@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>Library</OutputType>
     <TargetFrameworks>net10.0</TargetFrameworks>
@@ -29,7 +29,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="1nception" Version="13.0.1" />
+    <PackageReference Include="1nception" Version="13.3.0-preview.4" />
     <PackageReference Include="CassandraCSharpDriver" Version="3.22.1" />
     <PackageReference Include="CassandraCSharpDriver.OpenTelemetry" Version="3.22.1" />
     <InternalsVisibleTo Include="One.Inception.Projections.Cassandra.Integration.Tests" />

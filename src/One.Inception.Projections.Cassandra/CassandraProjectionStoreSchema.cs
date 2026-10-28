@@ -53,6 +53,7 @@ public class CassandraProjectionStoreSchema : IProjectionStoreStorageManager
 
     public async Task CreateTableAsync(ISession session, string location)
     {
+        _inceptionContextAccessor.Context.EnsureTenantIsNotBeingDeleted();
         long t0 = Stopwatch.GetTimestamp();
 
         if (logger.IsEnabled(LogLevel.Debug))
@@ -60,6 +61,8 @@ public class CassandraProjectionStoreSchema : IProjectionStoreStorageManager
 
         PreparedStatement statement = await _createTablePreparedStatementNew.PrepareStatementAsync(session, location);
 
+        _inceptionContextAccessor.Context.EnsureTenantIsNotBeingDeleted();
+        logger.LogTrace("Executing CREATE TABLE: Tenant={tenant}, Table={table}", _inceptionContextAccessor.Context.Tenant, location);
         var rs = await session.ExecuteAsync(statement.Bind()).ConfigureAwait(false);
 
         TimeSpan elapsed = Stopwatch.GetElapsedTime(t0);
@@ -94,9 +97,12 @@ public class CassandraProjectionStoreSchema : IProjectionStoreStorageManager
 
     public async Task CreateKeyspace(ISession session)
     {
+        _inceptionContextAccessor.Context.EnsureTenantIsNotBeingDeleted();
         long t0 = Stopwatch.GetTimestamp();
 
         IStatement createTableStatement = await GetCreateKeySpaceQuery(session).ConfigureAwait(false);
+        _inceptionContextAccessor.Context.EnsureTenantIsNotBeingDeleted();
+        logger.LogTrace("Executing CREATE KEYSPACE: Tenant={tenant}, Keyspace={keyspace}", _inceptionContextAccessor.Context.Tenant, cassandraProvider.GetKeyspace());
         var rs = await session.ExecuteAsync(createTableStatement).ConfigureAwait(false);
 
         TimeSpan elapsed = Stopwatch.GetElapsedTime(t0);
