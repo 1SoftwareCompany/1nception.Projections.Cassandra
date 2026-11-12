@@ -1,4 +1,6 @@
-﻿using System;
+using One.Inception.MessageProcessing;
+using One.Inception.Multitenancy;
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Cassandra;
@@ -20,9 +22,10 @@ public class CassandraProvider : ICassandraProvider
 
     protected ICluster cluster;
     protected ISession session;
+    private readonly IInceptionContextAccessor contextAccessor;
 
     private string baseConfigurationKeyspace;
-    public CassandraProvider(IOptionsMonitor<CassandraProviderOptions> optionsMonitor, IKeyspaceNamingStrategy keyspaceNamingStrategy, ILogger<CassandraProvider> logger, IInitializer initializer = null)
+    public CassandraProvider(IOptionsMonitor<CassandraProviderOptions> optionsMonitor, IKeyspaceNamingStrategy keyspaceNamingStrategy, ILogger<CassandraProvider> logger, IInitializer initializer = null, IInceptionContextAccessor contextAccessor = null)
     {
         if (optionsMonitor is null) throw new ArgumentNullException(nameof(optionsMonitor));
         if (keyspaceNamingStrategy is null) throw new ArgumentNullException(nameof(keyspaceNamingStrategy));
@@ -30,6 +33,7 @@ public class CassandraProvider : ICassandraProvider
         this.options = optionsMonitor.CurrentValue;
         this.keyspaceNamingStrategy = keyspaceNamingStrategy;
         this.initializer = initializer;
+        this.contextAccessor = contextAccessor;
         this.logger = logger;
     }
 
@@ -110,6 +114,31 @@ public class CassandraProvider : ICassandraProvider
 
     public async Task<ISession> GetSessionAsync()
     {
+        EnsureNormalAccess();
+        ISession result = await GetSessionCoreAsync().ConfigureAwait(false);
+        EnsureNormalAccess();
+        return result;
+    }
+
+    private void EnsureNormalAccess()
+    {
+        InceptionContext context = contextAccessor?.Context;
+        bool deleting = context?.IsTenantBeingDeleted == true;
+        logger.LogTrace("Cassandra normal session check: Tenant={tenant}, HasContext={hasContext}, BeingDeleted={beingDeleted}, Allowed={allowed}",
+            context?.Tenant, context != null, deleting, !deleting);
+        if (deleting)
+            throw new TenantBeingDeletedException(context.Tenant);
+    }
+
+    public Task<ISession> GetWipeSessionAsync()
+    {
+        logger.LogTrace("Cassandra wipe session requested: Tenant={tenant}, BeingDeleted={beingDeleted}. Bypassing normal access check; reusing shared session.", contextAccessor?.Context?.Tenant, contextAccessor?.Context?.IsTenantBeingDeleted);
+        return GetSessionCoreAsync();
+    }
+
+    private async Task<ISession> GetSessionCoreAsync()
+    {
+        logger.LogTrace("Acquiring shared Cassandra session: Tenant={tenant}, CachedSessionAvailable={cachedSessionAvailable}", contextAccessor?.Context?.Tenant, session != null && !session.IsDisposed);
         bool lockAccuired = false;
 
         if (session is null || session.IsDisposed)

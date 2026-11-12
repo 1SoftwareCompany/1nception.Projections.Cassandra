@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
@@ -21,6 +21,7 @@ public class CassandraProjectionPartitionStoreSchema : ICassandraProjectionParti
 
     private readonly ILogger<CassandraProjectionPartitionStoreSchema> logger;
     private readonly ICassandraProvider cassandraProvider;
+    private readonly IInceptionContextAccessor contextAccessor;
     private readonly ICassandraReplicationStrategy replicationStrategy;
     private CreateTablePreparedStatement _createTablePreparedStatement;
 
@@ -29,6 +30,7 @@ public class CassandraProjectionPartitionStoreSchema : ICassandraProjectionParti
         if (cassandraProvider is null) throw new ArgumentNullException(nameof(cassandraProvider));
 
         this.cassandraProvider = cassandraProvider;
+        this.contextAccessor = inceptionContextAccessor;
         this.replicationStrategy = replicationStrategy;
         this.logger = logger;
 
@@ -39,6 +41,7 @@ public class CassandraProjectionPartitionStoreSchema : ICassandraProjectionParti
 
     public async Task CreateProjectionPartitionsStorage()
     {
+        contextAccessor.Context.EnsureTenantIsNotBeingDeleted();
         ISession session = await GetSessionAsync().ConfigureAwait(false);
 
         await CreateKeyspace(session).ConfigureAwait(false);
@@ -50,6 +53,8 @@ public class CassandraProjectionPartitionStoreSchema : ICassandraProjectionParti
         long t0 = Stopwatch.GetTimestamp();
         PreparedStatement createEventsTableStatement = await _createTablePreparedStatement.PrepareStatementAsync(session, PartionsTableName);
 
+        contextAccessor.Context.EnsureTenantIsNotBeingDeleted();
+        logger.LogTrace("Executing CREATE partition table: Tenant={tenant}, Table={table}", contextAccessor.Context.Tenant, PartionsTableName);
         var rs = await session.ExecuteAsync(createEventsTableStatement.Bind()).ConfigureAwait(false);
 
         TimeSpan elapsed = Stopwatch.GetElapsedTime(t0);
@@ -62,9 +67,12 @@ public class CassandraProjectionPartitionStoreSchema : ICassandraProjectionParti
 
     public async Task CreateKeyspace(ISession session)
     {
+        contextAccessor.Context.EnsureTenantIsNotBeingDeleted();
         long t0 = Stopwatch.GetTimestamp();
 
         IStatement createTableStatement = await GetCreateKeySpaceQuery(session).ConfigureAwait(false);
+        contextAccessor.Context.EnsureTenantIsNotBeingDeleted();
+        logger.LogTrace("Executing CREATE KEYSPACE: Tenant={tenant}, Keyspace={keyspace}", contextAccessor.Context.Tenant, cassandraProvider.GetKeyspace());
         var rs = await session.ExecuteAsync(createTableStatement).ConfigureAwait(false);
 
         TimeSpan elapsed = Stopwatch.GetElapsedTime(t0);

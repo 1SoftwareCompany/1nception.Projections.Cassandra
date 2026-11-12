@@ -30,9 +30,9 @@ public class CassandraProjectionStoreSchemaNewTests
     }
 
     [Test]
-    public void CreateProjectionStorageNewAsync()
+    public async Task CreateProjectionStorageNewAsync()
     {
-        Assert.DoesNotThrowAsync(async () => await projectionStore.CreateProjectionsStorageAsync("tests"));
+        await Assert.DoesNotThrowAsync(async () => await projectionStore.CreateProjectionsStorageAsync("tests"));
 
         var tables = cluster.Metadata.GetTables(session.Keyspace);
         Assert.That(tables, Contains.Item("tests"));

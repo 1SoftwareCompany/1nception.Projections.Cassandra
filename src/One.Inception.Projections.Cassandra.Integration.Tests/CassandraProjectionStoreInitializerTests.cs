@@ -97,7 +97,7 @@ public class CassandraProjectionStoreNewTests
         var @event = new TestEvent(projectionId, DateTimeOffset.UtcNow);
         var commit = new ProjectionCommit(projectionId, version, @event);
 
-        Assert.DoesNotThrowAsync(async () => await projectionStore.SaveAsync(commit));
+        await Assert.DoesNotThrowAsync(async () => await projectionStore.SaveAsync(commit));
 
         var cfNew = naming.GetColumnFamilyNew(version);
         long partitionId = @event.Timestamp.Year * 100 + @event.Timestamp.Month;

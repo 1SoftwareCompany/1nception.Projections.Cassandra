@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>Library</OutputType>
     <TargetFrameworks>net10.0</TargetFrameworks>
@@ -29,14 +29,15 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="1nception" Version="13.0.1" />
-    <PackageReference Include="CassandraCSharpDriver" Version="3.22.1" />
-    <PackageReference Include="CassandraCSharpDriver.OpenTelemetry" Version="3.22.1" />
+    <PackageReference Include="1nception" Version="14.0.0" />
+    <PackageReference Include="CassandraCSharpDriver" Version="3.23.0" />
+    <PackageReference Include="CassandraCSharpDriver.OpenTelemetry" Version="3.23.0" />
     <InternalsVisibleTo Include="One.Inception.Projections.Cassandra.Integration.Tests" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Update="NuGetizer" Version="1.4.6" />
+    <PackageReference Update="Microsoft.SourceLink.GitHub" Version="11.0.100" />
+    <PackageReference Update="NuGetizer" Version="1.5.1" />
     <PackageReference Update="ThisAssembly.Git" Version="2.1.6" />
   </ItemGroup>
 

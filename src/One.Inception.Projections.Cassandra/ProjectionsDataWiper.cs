@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Threading.Tasks;
 using Cassandra;
 using One.Inception.DangerZone;
@@ -16,7 +16,7 @@ public class ProjectionsDataWiper : IDangerZone
 
     private DropKeyspaceQuery _dropKeyspaceQuery;
 
-    private Task<ISession> GetSessionAsync() => cassandraProvider.GetSessionAsync(); // In order to keep only 1 session alive (https://docs.datastax.com/en/developer/csharp-driver/3.16/faq/)
+    private Task<ISession> GetSessionAsync() => cassandraProvider.GetWipeSessionAsync(); // In order to keep only 1 session alive (https://docs.datastax.com/en/developer/csharp-driver/3.16/faq/)
 
     public ProjectionsDataWiper(IInceptionContextAccessor inceptionContextAccessor, ICassandraProvider cassandraProvider, ILogger<ProjectionsDataWiper> logger)
     {
