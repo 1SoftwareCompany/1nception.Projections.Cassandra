@@ -44,6 +44,13 @@ public class CassandraProjectionPartitionStoreSchema : ICassandraProjectionParti
         contextAccessor.Context.EnsureTenantIsNotBeingDeleted();
         ISession session = await GetSessionAsync().ConfigureAwait(false);
 
+        if (session.Cluster.Metadata.GetTable(cassandraProvider.GetKeyspace(), PartionsTableName) is not null)
+        {
+            if (logger.IsEnabled(LogLevel.Debug))
+                logger.LogDebug("[Projections] Table `{keyspace}.{tableName}` already exists. Skipping creation.", cassandraProvider.GetKeyspace(), PartionsTableName);
+            return;
+        }
+
         await CreateKeyspace(session).ConfigureAwait(false);
 
         string keyspace = cassandraProvider.GetKeyspace();
@@ -53,8 +60,8 @@ public class CassandraProjectionPartitionStoreSchema : ICassandraProjectionParti
         long t0 = Stopwatch.GetTimestamp();
         PreparedStatement createEventsTableStatement = await _createTablePreparedStatement.PrepareStatementAsync(session, PartionsTableName);
 
-        contextAccessor.Context.EnsureTenantIsNotBeingDeleted();
-        logger.LogTrace("Executing CREATE partition table: Tenant={tenant}, Table={table}", contextAccessor.Context.Tenant, PartionsTableName);
+        if (logger.IsEnabled(LogLevel.Trace))
+            logger.LogTrace("Executing CREATE partition table: Tenant={tenant}, Table={table}", contextAccessor.Context.Tenant, PartionsTableName);
         var rs = await session.ExecuteAsync(createEventsTableStatement.Bind()).ConfigureAwait(false);
 
         TimeSpan elapsed = Stopwatch.GetElapsedTime(t0);
@@ -62,17 +69,27 @@ public class CassandraProjectionPartitionStoreSchema : ICassandraProjectionParti
         if (logger.IsEnabled(LogLevel.Debug))
             logger.LogDebug("[Projections] Created table `{tableName}` in keyspace `{keyspace}`...", PartionsTableName, keyspace);
 
-        logger.LogInformation("[Projections] Created table `{tableName}`... Maybe?! Is schema in agreement = {isSchemaInAgreement}. Time elapsed : {timeForExecution}", PartionsTableName, rs?.Info?.IsSchemaInAgreement, elapsed);
+        if (logger.IsEnabled(LogLevel.Information))
+            logger.LogInformation("[Projections] Created table `{tableName}`... Maybe?! Is schema in agreement = {isSchemaInAgreement}. Time elapsed : {timeForExecution}", PartionsTableName, rs?.Info?.IsSchemaInAgreement, elapsed);
     }
 
     public async Task CreateKeyspace(ISession session)
     {
         contextAccessor.Context.EnsureTenantIsNotBeingDeleted();
+
+        if (session.Cluster.Metadata.GetKeyspace(cassandraProvider.GetKeyspace()) is not null)
+        {
+            if (logger.IsEnabled(LogLevel.Debug))
+                logger.LogDebug("[Projections] Keyspace `{keyspace}` already exists. Skipping creation.", cassandraProvider.GetKeyspace());
+            return;
+        }
+
         long t0 = Stopwatch.GetTimestamp();
 
         IStatement createTableStatement = await GetCreateKeySpaceQuery(session).ConfigureAwait(false);
         contextAccessor.Context.EnsureTenantIsNotBeingDeleted();
-        logger.LogTrace("Executing CREATE KEYSPACE: Tenant={tenant}, Keyspace={keyspace}", contextAccessor.Context.Tenant, cassandraProvider.GetKeyspace());
+        if (logger.IsEnabled(LogLevel.Trace))
+            logger.LogTrace("Executing CREATE KEYSPACE: Tenant={tenant}, Keyspace={keyspace}", contextAccessor.Context.Tenant, cassandraProvider.GetKeyspace());
         var rs = await session.ExecuteAsync(createTableStatement).ConfigureAwait(false);
 
         TimeSpan elapsed = Stopwatch.GetElapsedTime(t0);

@@ -89,7 +89,7 @@ public class CassandraProvider : ICassandraProvider
                     .WithOpenTelemetryInstrumentation()
                     .Build();
 
-                await cluster.RefreshSchemaAsync().ConfigureAwait(false);
+                await cluster.RefreshSchemaAsync().ConfigureAwait(false); // This does not refresh or trigger sync between the nodes. It is purely reading the cluster information and storing it locally in the driver.
             }
             else
             {
@@ -124,21 +124,23 @@ public class CassandraProvider : ICassandraProvider
     {
         InceptionContext context = contextAccessor?.Context;
         bool deleting = context?.IsTenantBeingDeleted == true;
-        logger.LogTrace("Cassandra normal session check: Tenant={tenant}, HasContext={hasContext}, BeingDeleted={beingDeleted}, Allowed={allowed}",
-            context?.Tenant, context != null, deleting, !deleting);
+        if (logger.IsEnabled(LogLevel.Trace))
+            logger.LogTrace("Cassandra normal session check: Tenant={tenant}, HasContext={hasContext}, BeingDeleted={beingDeleted}, Allowed={allowed}", context?.Tenant, context != null, deleting, !deleting);
         if (deleting)
             throw new TenantBeingDeletedException(context.Tenant);
     }
 
     public Task<ISession> GetWipeSessionAsync()
     {
-        logger.LogTrace("Cassandra wipe session requested: Tenant={tenant}, BeingDeleted={beingDeleted}. Bypassing normal access check; reusing shared session.", contextAccessor?.Context?.Tenant, contextAccessor?.Context?.IsTenantBeingDeleted);
+        if (logger.IsEnabled(LogLevel.Trace))
+            logger.LogTrace("Cassandra wipe session requested: Tenant={tenant}, BeingDeleted={beingDeleted}. Bypassing normal access check; reusing shared session.", contextAccessor?.Context?.Tenant, contextAccessor?.Context?.IsTenantBeingDeleted);
         return GetSessionCoreAsync();
     }
 
     private async Task<ISession> GetSessionCoreAsync()
     {
-        logger.LogTrace("Acquiring shared Cassandra session: Tenant={tenant}, CachedSessionAvailable={cachedSessionAvailable}", contextAccessor?.Context?.Tenant, session != null && !session.IsDisposed);
+        if (logger.IsEnabled(LogLevel.Trace))
+            logger.LogTrace("Acquiring shared Cassandra session: Tenant={tenant}, CachedSessionAvailable={cachedSessionAvailable}", contextAccessor?.Context?.Tenant, session != null && !session.IsDisposed);
         bool lockAccuired = false;
 
         if (session is null || session.IsDisposed)
@@ -151,8 +153,7 @@ public class CassandraProvider : ICassandraProvider
 
                 if (session is null || session.IsDisposed)
                 {
-                    if (logger.IsEnabled(LogLevel.Information))
-                        logger.LogInformation("Refreshing cassandra session...");
+                    logger.LogInformation("Refreshing cassandra session...");
 
                     ICluster cluster = await GetClusterAsync().ConfigureAwait(false);
                     session = await cluster.ConnectAsync().ConfigureAwait(false);
